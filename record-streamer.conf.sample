@@ -1,0 +1,22 @@
+target: {
+  host: "localhost"
+  port: 5554
+  uri: "Record"
+  token: "token"
+}
+
+streamer: {
+  test: "snow"
+}
+
+#streamer: {
+#  url: "rtsp://ipcam.stream:8554/bars"
+#}
+
+stun-server: "stun://stun.l.google.com:19302"
+#turn-server: "turn://username:password@host:port"
+
+debug: {
+#  log-level: 3
+#  lws-log-level: 2
+}
