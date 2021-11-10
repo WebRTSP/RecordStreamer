@@ -1,0 +1,3 @@
+#!/bin/sh -e
+
+cp "$SNAP/opt/$SNAP_NAME/etc/webrtsp-record-streamer.conf.sample" "$SNAP_COMMON/webrtsp-record-streamer.conf"

@@ -1,0 +1,94 @@
+name: webrtsp-record-streamer
+base: core20
+summary: Media URLs Recorder
+adopt-info: recorder
+description: |
+  Intended to help record RTSP streams from IP Cams (and some other URL types) to WebRTSP server.
+
+  **Config file location:** /var/snap/webrtsp-record-streamer/common/record-streamer.conf
+
+license: GPL-3.0
+grade: devel
+confinement: strict
+
+architectures:
+  - build-on: amd64
+  - build-on: i386
+  - build-on: armhf
+  - build-on: arm64
+
+environment:
+  GST_DEBUG: 3
+  GST_DEBUG_NO_COLOR: 1
+  GST_PLUGIN_PATH: $SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/gstreamer-1.0
+  GST_PLUGIN_SYSTEM_PATH: $SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/gstreamer-1.0
+  GST_PLUGIN_SCANNER: $SNAP/usr/libexec/$SNAPCRAFT_ARCH_TRIPLET/gstreamer-1.0/gst-plugin-scanner
+  LD_LIBRARY_PATH: $SNAP/opt/${SNAP_NAME}/lib
+
+layout:
+  /opt/webrtsp-record-streamer/lib:
+    symlink: $SNAP/opt/webrtsp-record-streamer/lib
+
+parts:
+  lws:
+    plugin: cmake
+    source-type: git
+    source: https://github.com/warmcat/libwebsockets.git
+    source-branch: v4.2-stable
+    cmake-parameters:
+      - -DLWS_WITHOUT_TESTAPPS=ON
+      - -DLWS_WITH_GLIB=ON
+      - -DCMAKE_INSTALL_PREFIX=/opt/${SNAPCRAFT_PROJECT_NAME}
+    build-packages:
+      - libssl-dev
+    stage-packages:
+      - libssl1.1
+  nice:
+    plugin: meson
+    source-type: git
+    source: https://github.com/libnice/libnice.git
+    source-branch: latest-release
+    meson-parameters:
+      - --prefix=/opt/${SNAPCRAFT_PROJECT_NAME}
+    build-packages:
+      - pkg-config
+      - libglib2.0-dev
+      - gtk-doc-tools
+    stage-packages:
+      - libgstreamer1.0-0
+  recorder:
+    plugin: cmake
+    source-type: git
+    source: https://github.com/WebRTSP/RecordStreamer.git
+    build-environment:
+      - PKG_CONFIG_PATH: $SNAPCRAFT_STAGE/opt/${SNAPCRAFT_PROJECT_NAME}/lib/pkgconfig:$PKG_CONFIG_PATH
+    cmake-parameters:
+      - -DCMAKE_INSTALL_PREFIX=/opt/${SNAPCRAFT_PROJECT_NAME}
+    override-pull: |
+        snapcraftctl pull
+        snapcraftctl set-version "$(git describe --always)"
+    after:
+      - lws
+      - nice
+    build-packages:
+      - g++
+      - make
+      - libspdlog-dev
+      - libconfig-dev
+      - libgstreamer1.0-dev
+      - libgstreamer-plugins-bad1.0-dev
+    stage-packages:
+      - libconfig9
+      - libslang2
+      - libspdlog1
+      - gstreamer1.0-plugins-good
+      - gstreamer1.0-plugins-bad
+      - gstreamer1.0-plugins-ugly
+      - gstreamer1.0-nice
+
+apps:
+  ReStreamer:
+    command: opt/${SNAPCRAFT_PROJECT_NAME}/bin/RecordStreamer
+    daemon: simple
+    plugs:
+      - network
