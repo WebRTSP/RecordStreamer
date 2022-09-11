@@ -5,11 +5,11 @@ target: {
   token: "token"
 }
 
-streamer: {
-  test: "snow"
+source: {
+  test: "smpte"
 }
 
-#streamer: {
+#source: {
 #  url: "rtsp://ipcam.stream:8554/bars"
 #}
 

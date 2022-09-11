@@ -71,16 +71,16 @@ static bool LoadConfig(Config* config)
             }
         }
 
-        config_setting_t* streamerConfig = config_lookup(&config, "streamer");
-        if(streamerConfig && CONFIG_TRUE == config_setting_is_group(streamerConfig)) {
+        config_setting_t* sourceConfig = config_lookup(&config, "source");
+        if(sourceConfig && CONFIG_TRUE == config_setting_is_group(sourceConfig)) {
             const char* test = nullptr;
-            if(CONFIG_TRUE == config_setting_lookup_string(streamerConfig, "test", &test)) {
+            if(CONFIG_TRUE == config_setting_lookup_string(sourceConfig, "test", &test)) {
                 loadedConfig.streamer.type = StreamerConfig::Type::Test;
                 loadedConfig.streamer.source = test;
             }
 
             const char* url = nullptr;
-            if(CONFIG_TRUE == config_setting_lookup_string(streamerConfig, "url", &url)) {
+            if(CONFIG_TRUE == config_setting_lookup_string(sourceConfig, "url", &url)) {
                 loadedConfig.streamer.type = StreamerConfig::Type::ReStreamer;
                 loadedConfig.streamer.source = url;
             }
