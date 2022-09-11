@@ -13,6 +13,12 @@ source: {
 #  url: "rtsp://ipcam.stream:8554/bars"
 #}
 
+#source: {
+#  onvif: "http://dev.cam:8899/"
+#  track-motion-event: true
+#  motion-record-time: 10 // seconds
+#}
+
 stun-server: "stun://stun.l.google.com:19302"
 #turn-server: "turn://username:password@host:port"
 

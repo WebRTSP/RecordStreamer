@@ -12,10 +12,13 @@ struct StreamerConfig
     enum class Type {
         Test,
         ReStreamer,
+        OnvifReStreamer
     };
 
     Type type = Type::Test;
     std::string source;
+    bool recordOnMotion = false;
+    std::chrono::seconds motionRecordDuration = std::chrono::seconds(10);
 };
 
 struct Config : public client::Config

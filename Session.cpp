@@ -27,7 +27,7 @@ bool Session::onOptionsResponse(
     if(!isSupported(rtsp::Method::RECORD))
         return false;
 
-    startRecord(_config.recordToken);
+    startRecord(_config.streamer.source);
 
     return true;
 }

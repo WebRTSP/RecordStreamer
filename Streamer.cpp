@@ -16,19 +16,22 @@
 #include "RtStreaming/GstRtStreaming/GstReStreamer.h"
 
 #include "Session.h"
+#include "OnvifSession.h"
 
 enum {
     RECONNECT_TIMEOUT = 10,
 };
 
 
-static std::unique_ptr<WebRTCPeer> CreateClientPeer(const Config& config, const std::string&)
+static std::unique_ptr<WebRTCPeer> CreateClientPeer(const Config& config, const std::string& uri)
 {
     switch(config.streamer.type) {
     case StreamerConfig::Type::Test:
         return std::make_unique<GstTestStreamer>(config.streamer.source);
     case StreamerConfig::Type::ReStreamer:
-        return std::make_unique<GstReStreamer>(config.streamer.source, std::string());
+        return std::make_unique<GstReStreamer>(uri, std::string());
+    case StreamerConfig::Type::OnvifReStreamer:
+        return std::make_unique<GstReStreamer>(uri, std::string());
     default:
         return nullptr;
     }
@@ -39,12 +42,21 @@ static std::unique_ptr<rtsp::ClientSession> CreateClientSession (
     const std::function<void (const rtsp::Request*) noexcept>& sendRequest,
     const std::function<void (const rtsp::Response*) noexcept>& sendResponse) noexcept
 {
-    return
-        std::make_unique<Session>(
-            config,
-            std::bind(CreateClientPeer, std::ref(config), std::placeholders::_1),
-            sendRequest,
-            sendResponse);
+    if(config.streamer.type == StreamerConfig::Type::OnvifReStreamer) {
+        return
+            std::make_unique<OnvifSession>(
+                config,
+                std::bind(CreateClientPeer, std::ref(config), std::placeholders::_1),
+                sendRequest,
+                sendResponse);
+    } else {
+        return
+            std::make_unique<Session>(
+                config,
+                std::bind(CreateClientPeer, std::ref(config), std::placeholders::_1),
+                sendRequest,
+                sendResponse);
+    }
 }
 
 static void ClientDisconnected(client::WsClient* client) noexcept

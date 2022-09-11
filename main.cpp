@@ -84,6 +84,21 @@ static bool LoadConfig(Config* config)
                 loadedConfig.streamer.type = StreamerConfig::Type::ReStreamer;
                 loadedConfig.streamer.source = url;
             }
+
+            const char* onvifUrl = nullptr;
+            if(CONFIG_TRUE == config_setting_lookup_string(sourceConfig, "onvif", &onvifUrl)) {
+                loadedConfig.streamer.type = StreamerConfig::Type::OnvifReStreamer;
+                loadedConfig.streamer.source = onvifUrl;
+            }
+
+            int trackMotionEvent = FALSE;
+            config_setting_lookup_bool(sourceConfig, "track-motion-event", &trackMotionEvent);
+            loadedConfig.streamer.recordOnMotion = (trackMotionEvent != FALSE);
+
+            int recordDuration = 0;
+            if(CONFIG_TRUE == config_setting_lookup_int(sourceConfig, "motion-record-time", &recordDuration)) {
+                loadedConfig.streamer.motionRecordDuration = std::chrono::seconds(recordDuration);
+            }
         }
 
         config_setting_t* debugConfig = config_lookup(&config, "debug");
