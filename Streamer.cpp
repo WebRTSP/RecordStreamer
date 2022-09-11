@@ -28,7 +28,7 @@ static std::unique_ptr<WebRTCPeer> CreateClientPeer(const Config& config, const 
     case StreamerConfig::Type::Test:
         return std::make_unique<GstTestStreamer>(config.streamer.source);
     case StreamerConfig::Type::ReStreamer:
-        return std::make_unique<GstReStreamer>(config.streamer.source);
+        return std::make_unique<GstReStreamer>(config.streamer.source, std::string());
     default:
         return nullptr;
     }
@@ -42,7 +42,6 @@ static std::unique_ptr<rtsp::ClientSession> CreateClientSession (
     return
         std::make_unique<Session>(
             config,
-            config.uri,
             std::bind(CreateClientPeer, std::ref(config), std::placeholders::_1),
             sendRequest,
             sendResponse);

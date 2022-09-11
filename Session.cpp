@@ -3,11 +3,16 @@
 
 Session::Session(
     const Config& config,
-    const std::string& uri,
-    const std::function<std::unique_ptr<WebRTCPeer> (const std::string& uri) noexcept>& createPeer,
+    const CreatePeer& createPeer,
     const std::function<void (const rtsp::Request*) noexcept>& sendRequest,
     const std::function<void (const rtsp::Response*) noexcept>& sendResponse) noexcept :
-    ClientRecordSession(uri, config.iceServers, createPeer, sendRequest, sendResponse),
+    ClientRecordSession(
+        config.uri,
+        config.token,
+        config.iceServers,
+        createPeer,
+        sendRequest,
+        sendResponse),
     _config(config)
 {
 }
