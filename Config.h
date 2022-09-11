@@ -23,8 +23,8 @@ struct Config : public client::Config
     spdlog::level::level_enum logLevel = spdlog::level::info;
     spdlog::level::level_enum lwsLogLevel = spdlog::level::warn;
 
-    std::string uri;
-    std::string token;
+    std::string targetUri;
+    std::string recordToken;
 
     typedef std::deque<std::string> IceServers;
     IceServers iceServers;

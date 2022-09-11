@@ -7,8 +7,8 @@ Session::Session(
     const std::function<void (const rtsp::Request*) noexcept>& sendRequest,
     const std::function<void (const rtsp::Response*) noexcept>& sendResponse) noexcept :
     ClientRecordSession(
-        config.uri,
-        config.token,
+        config.targetUri,
+        config.recordToken,
         config.iceServers,
         createPeer,
         sendRequest,
@@ -27,7 +27,7 @@ bool Session::onOptionsResponse(
     if(!isSupported(rtsp::Method::RECORD))
         return false;
 
-    startRecord(_config.token);
+    startRecord(_config.recordToken);
 
     return true;
 }

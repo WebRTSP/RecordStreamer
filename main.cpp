@@ -62,12 +62,12 @@ static bool LoadConfig(Config* config)
 
             const char* uri = nullptr;
             if(CONFIG_TRUE == config_setting_lookup_string(targetConfig, "uri", &uri)) {
-                loadedConfig.uri = uri;
+                loadedConfig.targetUri = uri;
             }
 
             const char* token = nullptr;
             if(CONFIG_TRUE == config_setting_lookup_string(targetConfig, "token", &token)) {
-                loadedConfig.token = token;
+                loadedConfig.recordToken = token;
             }
         }
 
