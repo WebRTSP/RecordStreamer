@@ -61,7 +61,7 @@ parts:
     source-type: git
     source: .
     build-environment:
-      - PKG_CONFIG_PATH: $SNAPCRAFT_STAGE/opt/${SNAPCRAFT_PROJECT_NAME}/lib/pkgconfig:$PKG_CONFIG_PATH
+      - PKG_CONFIG_PATH: $SNAPCRAFT_STAGE/opt/${SNAPCRAFT_PROJECT_NAME}/lib/pkgconfig:$SNAPCRAFT_STAGE/opt/${SNAPCRAFT_PROJECT_NAME}/lib/${SNAPCRAFT_ARCH_TRIPLET}/pkgconfig:$PKG_CONFIG_PATH
     cmake-parameters:
       - -DCMAKE_INSTALL_PREFIX=/opt/${SNAPCRAFT_PROJECT_NAME}
     override-pull: |
@@ -77,7 +77,12 @@ parts:
       - libconfig-dev
       - libgstreamer1.0-dev
       - libgstreamer-plugins-bad1.0-dev
-      - libgsoap-dev
+      - gsoap
+    override-build: |
+        cd ${SNAPCRAFT_PART_SRC}/onvif
+        ./generate.sh
+        cd -
+        snapcraftctl build
     stage-packages:
       - libconfig9
       - libslang2
@@ -86,7 +91,7 @@ parts:
       - gstreamer1.0-plugins-bad
       - gstreamer1.0-plugins-ugly
       - gstreamer1.0-nice
-      - gsoap
+      - libgsoap-2.8.91
 
 apps:
   ReStreamer:
