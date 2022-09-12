@@ -59,7 +59,7 @@ parts:
   recorder:
     plugin: cmake
     source-type: git
-    source: https://github.com/WebRTSP/RecordStreamer.git
+    source: .
     build-environment:
       - PKG_CONFIG_PATH: $SNAPCRAFT_STAGE/opt/${SNAPCRAFT_PROJECT_NAME}/lib/pkgconfig:$PKG_CONFIG_PATH
     cmake-parameters:
