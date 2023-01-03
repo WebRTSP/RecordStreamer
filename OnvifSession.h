@@ -18,8 +18,8 @@ public:
     OnvifSession(
         const Config&,
         const CreatePeer& createPeer,
-        const std::function<void (const rtsp::Request*) noexcept>& sendRequest,
-        const std::function<void (const rtsp::Response*) noexcept>& sendResponse) noexcept;
+        const SendRequest& sendRequest,
+        const SendResponse& sendResponse) noexcept;
     ~OnvifSession();
 
     bool onOptionsResponse(

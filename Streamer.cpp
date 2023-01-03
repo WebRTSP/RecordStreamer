@@ -39,8 +39,8 @@ static std::unique_ptr<WebRTCPeer> CreateClientPeer(const Config& config, const 
 
 static std::unique_ptr<rtsp::ClientSession> CreateClientSession (
     const Config& config,
-    const std::function<void (const rtsp::Request*) noexcept>& sendRequest,
-    const std::function<void (const rtsp::Response*) noexcept>& sendResponse) noexcept
+    const rtsp::Session::SendRequest& sendRequest,
+    const rtsp::Session::SendResponse& sendResponse) noexcept
 {
     if(config.streamer.type == StreamerConfig::Type::OnvifReStreamer) {
         return
@@ -59,7 +59,7 @@ static std::unique_ptr<rtsp::ClientSession> CreateClientSession (
     }
 }
 
-static void ClientDisconnected(client::WsClient* client) noexcept
+static void ClientDisconnected(client::WsClient& client) noexcept
 {
     GSourcePtr timeoutSourcePtr(g_timeout_source_new_seconds(RECONNECT_TIMEOUT));
     GSource* timeoutSource = timeoutSourcePtr.get();
@@ -67,7 +67,7 @@ static void ClientDisconnected(client::WsClient* client) noexcept
         [] (gpointer userData) -> gboolean {
             static_cast<client::WsClient*>(userData)->connect();
             return false;
-        }, client, nullptr);
+        }, &client, nullptr);
     g_source_attach(timeoutSource, g_main_context_get_thread_default());
 }
 
@@ -90,7 +90,7 @@ int StreamerMain(const Config& config)
             std::ref(config),
             std::placeholders::_1,
             std::placeholders::_2),
-        std::bind(ClientDisconnected, &client));
+        ClientDisconnected);
 
     if(client.init()) {
         client.connect();

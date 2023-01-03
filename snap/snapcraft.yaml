@@ -78,11 +78,6 @@ parts:
       - libgstreamer1.0-dev
       - libgstreamer-plugins-bad1.0-dev
       - gsoap
-    override-build: |
-        cd ${SNAPCRAFT_PART_SRC}/onvif
-        ./generate.sh
-        cd -
-        snapcraftctl build
     stage-packages:
       - libconfig9
       - libslang2

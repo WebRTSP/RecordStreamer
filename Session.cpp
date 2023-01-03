@@ -4,8 +4,8 @@
 Session::Session(
     const Config& config,
     const CreatePeer& createPeer,
-    const std::function<void (const rtsp::Request*) noexcept>& sendRequest,
-    const std::function<void (const rtsp::Response*) noexcept>& sendResponse) noexcept :
+    const SendRequest& sendRequest,
+    const SendResponse& sendResponse) noexcept :
     ClientRecordSession(
         config.targetUri,
         config.recordToken,

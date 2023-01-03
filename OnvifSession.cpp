@@ -2,7 +2,10 @@
 
 #include "OnvifSession.h"
 
-#include "onvif/DeviceBinding.nsmap"
+#include "ONVIF/DeviceBinding.nsmap"
+#include "ONVIF/soapDeviceBindingProxy.h"
+#include "ONVIF/soapMediaBindingProxy.h"
+#include "ONVIF/soapPullPointSubscriptionBindingProxy.h"
 
 #include "CxxPtr/GlibPtr.h"
 
@@ -415,8 +418,8 @@ void OnvifSession::Private::startRecordStopTimeout() noexcept
 OnvifSession::OnvifSession(
     const Config& config,
     const CreatePeer& createPeer,
-    const std::function<void (const rtsp::Request*) noexcept>& sendRequest,
-    const std::function<void (const rtsp::Response*) noexcept>& sendResponse) noexcept :
+    const SendRequest& sendRequest,
+    const SendResponse& sendResponse) noexcept :
     ClientRecordSession(
         config.targetUri,
         config.recordToken,

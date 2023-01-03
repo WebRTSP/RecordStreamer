@@ -37,12 +37,10 @@ target_include_directories(${PROJECT_NAME} PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/WebRTSP
     ${LIBCONFIG_INCLUDE_DIRS}
     ${SPDLOG_INCLUDE_DIRS}
-    ${GSOAP_INCLUDE_DIRS}
-    ${GSOAP_SHARE_DIR})
+    ${CMAKE_CURRENT_SOURCE_DIR}/WebRTSP/RtStreaming/deps)
 target_link_libraries(${PROJECT_NAME}
     ${LIBCONFIG_LIBRARIES}
     ${SPDLOG_LDFLAGS}
-    ${GSOAP_LDFLAGS}
     RtspParser
     Signalling
     RtStreaming
