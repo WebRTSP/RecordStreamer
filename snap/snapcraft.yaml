@@ -78,6 +78,7 @@ parts:
       - libgstreamer1.0-dev
       - libgstreamer-plugins-bad1.0-dev
       - gsoap
+      - libgsoap-dev
     stage-packages:
       - libconfig9
       - libslang2
