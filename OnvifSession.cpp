@@ -305,7 +305,7 @@ void OnvifSession::Private::onMediaUris(std::unique_ptr<MediaUris>& mediaUris) n
     if(config.streamer.recordOnMotion) {
         startMotionEventRequestTimeout();
     } else {
-        owner->startRecord(mediaUris->streamUri);
+        owner->startRecord(this->mediaUris->streamUri);
     }
 }
 
