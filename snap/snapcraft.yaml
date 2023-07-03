@@ -1,5 +1,5 @@
 name: webrtsp-record-streamer
-base: core20
+base: core22
 summary: Media URLs Recorder
 adopt-info: recorder
 description: |
@@ -13,7 +13,6 @@ confinement: strict
 
 architectures:
   - build-on: amd64
-  - build-on: i386
   - build-on: armhf
   - build-on: arm64
 
@@ -22,8 +21,7 @@ environment:
   GST_DEBUG_NO_COLOR: 1
   GST_PLUGIN_PATH: $SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/gstreamer-1.0
   GST_PLUGIN_SYSTEM_PATH: $SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/gstreamer-1.0
-  GST_PLUGIN_SCANNER: $SNAP/usr/libexec/$SNAPCRAFT_ARCH_TRIPLET/gstreamer-1.0/gst-plugin-scanner
-  LD_LIBRARY_PATH: $SNAP/opt/${SNAP_NAME}/lib
+  GST_PLUGIN_SCANNER: $SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/gstreamer1.0/gstreamer-1.0/gst-plugin-scanner
 
 layout:
   /opt/webrtsp-record-streamer/lib:
@@ -42,34 +40,21 @@ parts:
     build-packages:
       - libssl-dev
     stage-packages:
-      - libssl1.1
-  nice:
-    plugin: meson
-    source-type: git
-    source: https://github.com/libnice/libnice.git
-    source-branch: latest-release
-    meson-parameters:
-      - --prefix=/opt/${SNAPCRAFT_PROJECT_NAME}
-    build-packages:
-      - pkg-config
-      - libglib2.0-dev
-      - gtk-doc-tools
-    stage-packages:
-      - libgstreamer1.0-0
+      - libssl3
   recorder:
     plugin: cmake
     source-type: git
     source: .
     build-environment:
-      - PKG_CONFIG_PATH: $SNAPCRAFT_STAGE/opt/${SNAPCRAFT_PROJECT_NAME}/lib/pkgconfig:$SNAPCRAFT_STAGE/opt/${SNAPCRAFT_PROJECT_NAME}/lib/${SNAPCRAFT_ARCH_TRIPLET}/pkgconfig:$PKG_CONFIG_PATH
+      - PKG_CONFIG_PATH: $SNAPCRAFT_STAGE/opt/${SNAPCRAFT_PROJECT_NAME}/lib/pkgconfig:$SNAPCRAFT_STAGE/opt/${SNAPCRAFT_PROJECT_NAME}/lib/${SNAPCRAFT_ARCH_TRIPLET}/pkgconfig:${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}
     cmake-parameters:
+      - -DCMAKE_BUILD_TYPE=Release
       - -DCMAKE_INSTALL_PREFIX=/opt/${SNAPCRAFT_PROJECT_NAME} -DUSE_LIBMICROHTTPD=NO
     override-pull: |
-        snapcraftctl pull
-        snapcraftctl set-version "$(git describe --always)"
+        craftctl default
+        craftctl set version="$(git describe --always)"
     after:
       - lws
-      - nice
     build-packages:
       - g++
       - make
@@ -79,6 +64,7 @@ parts:
       - libgstreamer-plugins-bad1.0-dev
       - gsoap
       - libgsoap-dev
+      - libnice-dev
     stage-packages:
       - libconfig9
       - libslang2
@@ -87,11 +73,17 @@ parts:
       - gstreamer1.0-plugins-bad
       - gstreamer1.0-plugins-ugly
       - gstreamer1.0-nice
-      - libgsoap-2.8.91
+      - libgsoap-2.8.117
+      - libnice10
+    prime:
+      - -usr/lib/arm-linux-gnueabihf/libde265.so.0.1.1
+      - -usr/lib/arm-linux-gnueabihf/libmpeg2.so.0.1.0
 
 apps:
-  ReStreamer:
+  RecordStreamer:
     command: opt/${SNAPCRAFT_PROJECT_NAME}/bin/RecordStreamer
     daemon: simple
     plugs:
       - network
+    environment:
+      LD_LIBRARY_PATH: $SNAP/opt/${SNAP_NAME}/lib:$LD_LIBRARY_PATH
