@@ -91,6 +91,16 @@ static bool LoadConfig(Config* config)
                 loadedConfig.streamer.source = onvifUrl;
             }
 
+            const char* username = nullptr;
+            if(CONFIG_TRUE == config_setting_lookup_string(sourceConfig, "username", &username)) {
+                loadedConfig.streamer.username = username;
+            }
+
+            const char* password = nullptr;
+            if(CONFIG_TRUE == config_setting_lookup_string(sourceConfig, "password", &password)) {
+                loadedConfig.streamer.password = password;
+            }
+
             int trackMotionEvent = FALSE;
             config_setting_lookup_bool(sourceConfig, "track-motion-event", &trackMotionEvent);
             loadedConfig.streamer.recordOnMotion = (trackMotionEvent != FALSE);

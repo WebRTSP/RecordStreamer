@@ -1,5 +1,6 @@
 #pragma once
 
+#include <optional>
 #include <deque>
 
 #include <spdlog/common.h>
@@ -17,6 +18,8 @@ struct StreamerConfig
 
     Type type = Type::Test;
     std::string source;
+    std::optional<std::string> username;
+    std::optional<std::string> password;
     bool recordOnMotion = false;
     std::chrono::seconds motionRecordDuration = std::chrono::seconds(10);
 };

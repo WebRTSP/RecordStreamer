@@ -2,6 +2,8 @@
 
 #include "OnvifSession.h"
 
+#include <gsoap/plugin/wsseapi.h>
+
 #include "ONVIF/DeviceBinding.nsmap"
 #include "ONVIF/soapDeviceBindingProxy.h"
 #include "ONVIF/soapMediaBindingProxy.h"
@@ -12,6 +14,24 @@
 
 #include "Log.h"
 
+
+namespace {
+
+void AddAuth(
+    struct soap* soap,
+    const std::optional<std::string>& username,
+    const std::optional<std::string>& password) noexcept
+{
+    if(!username && !password) return;
+
+    soap_wsse_add_UsernameTokenDigest(
+        soap,
+        nullptr,
+        username ? username->c_str() : "",
+        password ? password->c_str() : "");
+}
+
+}
 
 enum {
     MOTION_EVENT_REQUEST_TIMEOUT = 1,
@@ -114,6 +134,7 @@ void OnvifSession::Private::requestMediaUrisTaskFunc(
     DeviceBindingProxy deviceProxy(config.streamer.source.c_str());
     _tds__GetCapabilities getCapabilities;
     _tds__GetCapabilitiesResponse getCapabilitiesResponse;
+    AddAuth(deviceProxy.soap, config.streamer.username, config.streamer.password);
     status = deviceProxy.GetCapabilities(&getCapabilities, getCapabilitiesResponse);
 
     if(status != SOAP_OK) {
@@ -128,6 +149,8 @@ void OnvifSession::Private::requestMediaUrisTaskFunc(
     MediaBindingProxy mediaProxy(mediaEndpoint.c_str());
     _trt__GetProfiles getProfiles;
     _trt__GetProfilesResponse getProfilesResponse;
+
+    AddAuth(mediaProxy.soap, config.streamer.username, config.streamer.password);
     status = mediaProxy.GetProfiles(&getProfiles, getProfilesResponse);
 
     if(status != SOAP_OK) {
@@ -161,6 +184,7 @@ void OnvifSession::Private::requestMediaUrisTaskFunc(
 
     getStreamUri.StreamSetup = &streamSetup;
 
+    AddAuth(mediaProxy.soap, config.streamer.username, config.streamer.password);
     status = mediaProxy.GetStreamUri(&getStreamUri, getStreamUriResponse);
 
     if(status != SOAP_OK) {
