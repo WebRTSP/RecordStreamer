@@ -17,6 +17,12 @@
 
 namespace {
 
+struct RequestMotionEventTaskData
+{
+    const Config *const config;
+    const std::string mediaEndpoint;
+};
+
 void AddAuth(
     struct soap* soap,
     const std::optional<std::string>& username,
@@ -205,8 +211,40 @@ void OnvifSession::Private::requestMediaUrisTaskFunc(
         return;
     }
 
-    const std::string& mediaUriUri = getStreamUriResponse.MediaUri->Uri;
-
+    GCharPtr uriStringPtr;
+    if(config.streamer.username || config.streamer.password) {
+        GUriPtr uriPtr(g_uri_parse(mediaUri->Uri.c_str(), G_URI_FLAGS_ENCODED, nullptr));
+        GUri* uri = uriPtr.get();
+        if(!g_uri_get_user(uri) && !g_uri_get_password(uri)) {
+            GCharPtr userPtr(
+                config.streamer.username ?
+                    g_uri_escape_string(
+                        config.streamer.username->c_str(),
+                        G_URI_RESERVED_CHARS_SUBCOMPONENT_DELIMITERS,
+                        false) :
+                        nullptr);
+            GCharPtr passwordPtr(
+                config.streamer.password ?
+                    g_uri_escape_string(
+                        config.streamer.password->c_str(),
+                        G_URI_RESERVED_CHARS_SUBCOMPONENT_DELIMITERS,
+                        false) :
+                        nullptr);
+            uriStringPtr.reset(
+                g_uri_join_with_user(
+                    G_URI_FLAGS_ENCODED,
+                    g_uri_get_scheme(uri),
+                    userPtr.get(),
+                    passwordPtr.get(),
+                    g_uri_get_auth_params(uri),
+                    g_uri_get_host(uri),
+                    g_uri_get_port(uri),
+                    g_uri_get_path(uri),
+                    g_uri_get_query(uri),
+                    g_uri_get_fragment(uri)));
+        }
+    }
+    const std::string& mediaUriUri = uriStringPtr ? std::string(uriStringPtr.get()) : mediaUri->Uri;
 
     g_task_return_pointer(
         task,
@@ -222,12 +260,13 @@ void OnvifSession::Private::requestMotionEventTaskFunc(
 {
     soap_status status;
 
-    const gchar* mediaEndpoint = static_cast<gchar*>(taskData);
+    const RequestMotionEventTaskData& data = *static_cast<RequestMotionEventTaskData*>(taskData);
 
-    PullPointSubscriptionBindingProxy pullProxy(mediaEndpoint);
+    PullPointSubscriptionBindingProxy pullProxy(data.mediaEndpoint.c_str());
 
     _tev__PullMessages pullMessages;
     _tev__PullMessagesResponse pullMessagesResponse;
+    AddAuth(pullProxy.soap, data.config->streamer.username, data.config->streamer.password);
     status = pullProxy.PullMessages(&pullMessages, pullMessagesResponse);
     if(status != SOAP_OK) {
         const char* faultString = soap_fault_string(pullProxy.soap);
@@ -392,8 +431,8 @@ void OnvifSession::Private::requestMotionEvent() noexcept
     g_task_set_return_on_cancel(task, true);
     g_task_set_task_data(
         task,
-        g_strdup(mediaUris->mediaEndpointUri.c_str()),
-        [] (gpointer mediaEndpointUri) { g_free(mediaEndpointUri); });
+        new RequestMotionEventTaskData { &config, mediaUris->mediaEndpointUri },
+        [] (gpointer userData) { delete static_cast<RequestMotionEventTaskData*>(userData); });
 
     g_task_run_in_thread(task, requestMotionEventTaskFunc);
 }
