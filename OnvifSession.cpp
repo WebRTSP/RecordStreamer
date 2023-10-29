@@ -126,17 +126,17 @@ void OnvifSession::Private::requestMediaUrisTaskFunc(
     gpointer taskData,
     GCancellable* cancellable)
 {
-    soap_status status;
-
     const Config& config = *static_cast<const Config*>(taskData);
+
+    soap_status status;
 
 
     DeviceBindingProxy deviceProxy(config.streamer.source.c_str());
+
     _tds__GetCapabilities getCapabilities;
     _tds__GetCapabilitiesResponse getCapabilitiesResponse;
     AddAuth(deviceProxy.soap, config.streamer.username, config.streamer.password);
     status = deviceProxy.GetCapabilities(&getCapabilities, getCapabilitiesResponse);
-
     if(status != SOAP_OK) {
         const char* faultString = soap_fault_string(deviceProxy.soap);
         GError* error = g_error_new_literal(SoapDomain, status, faultString ? faultString : "GetCapabilities failed");
@@ -148,12 +148,11 @@ void OnvifSession::Private::requestMediaUrisTaskFunc(
 
 
     MediaBindingProxy mediaProxy(mediaEndpoint.c_str());
+
     _trt__GetProfiles getProfiles;
     _trt__GetProfilesResponse getProfilesResponse;
-
     AddAuth(mediaProxy.soap, config.streamer.username, config.streamer.password);
     status = mediaProxy.GetProfiles(&getProfiles, getProfilesResponse);
-
     if(status != SOAP_OK) {
         const char* faultString = soap_fault_string(deviceProxy.soap);
         GError* error = g_error_new_literal(SoapDomain, status, faultString ? faultString : "GetProfiles failed");
@@ -188,7 +187,6 @@ void OnvifSession::Private::requestMediaUrisTaskFunc(
 
     AddAuth(mediaProxy.soap, config.streamer.username, config.streamer.password);
     status = mediaProxy.GetStreamUri(&getStreamUri, getStreamUriResponse);
-
     if(status != SOAP_OK) {
         const char* faultString = soap_fault_string(deviceProxy.soap);
         GError* error = g_error_new_literal(SoapDomain, status, faultString ? faultString : "GetStreamUri failed");
@@ -197,7 +195,6 @@ void OnvifSession::Private::requestMediaUrisTaskFunc(
     }
 
     const tt__MediaUri *const mediaUri = getStreamUriResponse.MediaUri;
-
     if(!mediaUri) {
         GError* error =
             g_error_new_literal(
@@ -232,7 +229,6 @@ void OnvifSession::Private::requestMotionEventTaskFunc(
     _tev__PullMessages pullMessages;
     _tev__PullMessagesResponse pullMessagesResponse;
     status = pullProxy.PullMessages(&pullMessages, pullMessagesResponse);
-
     if(status != SOAP_OK) {
         const char* faultString = soap_fault_string(pullProxy.soap);
         GError* error = g_error_new_literal(SoapDomain, status, faultString ? faultString : "PullMessages failed");
