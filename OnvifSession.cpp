@@ -138,7 +138,8 @@ void OnvifSession::Private::requestMediaUrisTaskFunc(
     status = deviceProxy.GetCapabilities(&getCapabilities, getCapabilitiesResponse);
 
     if(status != SOAP_OK) {
-        GError* error = g_error_new_literal(SoapDomain, status, soap_fault_string(deviceProxy.soap));
+        const char* faultString = soap_fault_string(deviceProxy.soap);
+        GError* error = g_error_new_literal(SoapDomain, status, faultString ? faultString : "GetCapabilities failed");
         g_task_return_error(task, error);
         return;
     }
@@ -154,7 +155,8 @@ void OnvifSession::Private::requestMediaUrisTaskFunc(
     status = mediaProxy.GetProfiles(&getProfiles, getProfilesResponse);
 
     if(status != SOAP_OK) {
-        GError* error = g_error_new_literal(SoapDomain, status, soap_fault_string(mediaProxy.soap));
+        const char* faultString = soap_fault_string(deviceProxy.soap);
+        GError* error = g_error_new_literal(SoapDomain, status, faultString ? faultString : "GetProfiles failed");
         g_task_return_error(task, error);
         return;
     }
@@ -188,7 +190,8 @@ void OnvifSession::Private::requestMediaUrisTaskFunc(
     status = mediaProxy.GetStreamUri(&getStreamUri, getStreamUriResponse);
 
     if(status != SOAP_OK) {
-        GError* error = g_error_new_literal(SoapDomain, status, soap_fault_string(mediaProxy.soap));
+        const char* faultString = soap_fault_string(deviceProxy.soap);
+        GError* error = g_error_new_literal(SoapDomain, status, faultString ? faultString : "GetStreamUri failed");
         g_task_return_error(task, error);
         return;
     }
@@ -231,7 +234,8 @@ void OnvifSession::Private::requestMotionEventTaskFunc(
     status = pullProxy.PullMessages(&pullMessages, pullMessagesResponse);
 
     if(status != SOAP_OK) {
-        GError* error = g_error_new_literal(SoapDomain, status, soap_fault_string(pullProxy.soap));
+        const char* faultString = soap_fault_string(pullProxy.soap);
+        GError* error = g_error_new_literal(SoapDomain, status, faultString ? faultString : "PullMessages failed");
         g_task_return_error(task, error);
         return;
     }
