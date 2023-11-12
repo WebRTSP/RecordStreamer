@@ -24,9 +24,6 @@ bool Session::onOptionsResponse(
     if(!ClientRecordSession::onOptionsResponse(request, response))
         return false;
 
-    if(!isSupported(rtsp::Method::RECORD))
-        return false;
-
     startRecord(_config.streamer.source);
 
     return true;

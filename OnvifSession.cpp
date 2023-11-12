@@ -517,9 +517,6 @@ bool OnvifSession::onOptionsResponse(
     if(!ClientRecordSession::onOptionsResponse(request, response))
         return false;
 
-    if(!isSupported(rtsp::Method::RECORD))
-        return false;
-
     _p->requestMediaUris();
 
     return true;
