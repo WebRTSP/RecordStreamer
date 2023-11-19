@@ -62,7 +62,12 @@ static bool LoadConfig(Config* config)
 
             const char* uri = nullptr;
             if(CONFIG_TRUE == config_setting_lookup_string(targetConfig, "uri", &uri)) {
-                loadedConfig.targetUri = uri;
+                g_autofree gchar* escapedUri = g_uri_escape_string(uri, nullptr, false);
+                if(escapedUri) {
+                    loadedConfig.targetUri = escapedUri;
+                } else {
+                    Log()->error("Failed to escape target URI");
+                }
             }
 
             const char* token = nullptr;
