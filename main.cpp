@@ -162,6 +162,11 @@ static bool LoadConfig(Config* config)
         success = false;
     }
 
+    if(loadedConfig.targetUri.empty()) {
+        Log()->error("target URI is requred");
+        success = false;
+    }
+
     if(success) {
         *config = loadedConfig;
     }
