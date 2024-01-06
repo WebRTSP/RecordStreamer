@@ -68,16 +68,22 @@ static void ClientDisconnected(client::WsClient& client) noexcept
             static_cast<client::WsClient*>(userData)->connect();
             return false;
         }, &client, nullptr);
-    g_source_attach(timeoutSource, g_main_context_get_thread_default());
+    GMainContext* threadContext = g_main_context_get_thread_default();
+    g_source_attach(timeoutSource, threadContext ? threadContext : g_main_context_default());
 }
 
-int StreamerMain(const Config& config)
+int StreamerMain(const Config& config, bool useGlobalDefaultContext)
 {
     LibGst libGst;
 
-    GMainContextPtr contextPtr(g_main_context_new());
+    GMainContextPtr contextPtr(
+        useGlobalDefaultContext ?
+            g_main_context_ref(g_main_context_default()) :
+            g_main_context_new());
     GMainContext* context = contextPtr.get();
-    g_main_context_push_thread_default(context);
+    if(!useGlobalDefaultContext) {
+        g_main_context_push_thread_default(context);
+    }
 
     GMainLoopPtr loopPtr(g_main_loop_new(context, FALSE));
     GMainLoop* loop = loopPtr.get();

@@ -192,5 +192,5 @@ int main(int argc, char *argv[])
 
     LibGst libGst;
 
-    return StreamerMain(config);
+    return StreamerMain(config, true);
 }

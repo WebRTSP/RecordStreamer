@@ -3,4 +3,4 @@
 #include "Config.h"
 
 
-int StreamerMain(const Config&);
+int StreamerMain(const Config&, bool useGlobalDefaultContext);
