@@ -190,7 +190,5 @@ int main(int argc, char *argv[])
     InitClientSessionLogger(config.logLevel);
     InitStreamerLogger(config.logLevel);
 
-    LibGst libGst;
-
     return StreamerMain(config, true);
 }
