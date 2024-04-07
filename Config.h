@@ -7,6 +7,8 @@
 
 #include "Client/Config.h"
 
+#include "RtStreaming/WebRTCConfig.h"
+
 
 struct StreamerConfig
 {
@@ -32,8 +34,7 @@ struct Config : public client::Config
     std::string targetUri;
     std::string recordToken;
 
-    typedef std::deque<std::string> IceServers;
-    IceServers iceServers;
-
     StreamerConfig streamer;
+
+    std::shared_ptr<WebRTCConfig> webRTCConfig = std::make_shared<WebRTCConfig>();
 };

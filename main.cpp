@@ -139,7 +139,7 @@ static bool LoadConfig(Config* config)
         const char* stunServer = nullptr;
         if(CONFIG_TRUE == config_lookup_string(&config, "stun-server", &stunServer)) {
             if(0 == g_ascii_strncasecmp(stunServer, "stun://", 7)) {
-                loadedConfig.iceServers.emplace_back(stunServer);
+                loadedConfig.webRTCConfig->iceServers.emplace_back(stunServer);
             } else {
                 Log()->error("STUN server URL should start with \"stun://\"");
             }
@@ -148,7 +148,7 @@ static bool LoadConfig(Config* config)
         const char* turnServer = nullptr;
         if(CONFIG_TRUE == config_lookup_string(&config, "turn-server", &turnServer)) {
            if(0 == g_ascii_strncasecmp(turnServer, "turn://", 7)) {
-                loadedConfig.iceServers.emplace_back(turnServer);
+                loadedConfig.webRTCConfig->iceServers.emplace_back(turnServer);
             } else {
                 Log()->error("TURN server URL should start with \"turn://\"");
            }

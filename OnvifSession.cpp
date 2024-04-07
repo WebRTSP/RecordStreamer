@@ -487,7 +487,7 @@ OnvifSession::OnvifSession(
     ClientRecordSession(
         config.targetUri,
         config.recordToken,
-        config.iceServers,
+        config.webRTCConfig,
         createPeer,
         sendRequest,
         sendResponse),
