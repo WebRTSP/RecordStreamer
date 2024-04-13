@@ -70,6 +70,11 @@ static bool LoadConfig(Config* config)
                 }
             }
 
+            int useTls = TRUE;
+            if(CONFIG_TRUE == config_setting_lookup_bool(targetConfig, "tls", &useTls)) {
+                loadedConfig.useTls = useTls;
+            }
+
             const char* token = nullptr;
             if(CONFIG_TRUE == config_setting_lookup_string(targetConfig, "token", &token)) {
                 loadedConfig.recordToken = token;
