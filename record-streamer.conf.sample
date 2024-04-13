@@ -1,9 +1,10 @@
-target: {
-  host: "localhost"
-  port: 5554
-  uri: "Record"
-  token: "token"
-}
+#target: {
+#  host: "localhost"
+#  port: 5555
+#  tls: true
+#  uri: "Record"
+#  token: "token"
+#}
 
 source: {
   test: "smpte"
