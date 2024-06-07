@@ -1,9 +1,10 @@
 name: webrtsp-record-streamer
 base: core22
-summary: Media URLs Recorder
+summary: WebRTSP server remote Agent
 adopt-info: recorder
 description: |
-  Intended to help record RTSP streams from IP Cams (and some other URL types) to WebRTSP server.
+  Intended to record RTSP streams from IP Cams (and some other URL types) to WebRTSP server (for example to https://snapcraft.io/rtsp-to-webrtsp).
+  Can be used as part of Cloud DVR (https://github.com/WebRTSP/ReStreamer#how-to-use-it-as-cloud-dvr-for-ip-cam-not-accessible-directly)
 
   **Config file location:** /var/snap/webrtsp-record-streamer/common/record-streamer.conf
 
