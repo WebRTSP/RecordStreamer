@@ -11,16 +11,16 @@ Media URLs Recorder to WebRTSP server
 1. `sudoedit /var/snap/webrtsp-record-streamer/common/record-streamer.conf`;
 2. To load updated config it's required to restart Snap: `sudo snap restart webrtsp-record-streamer`;
 
-### How to use it as streamer for Cloud DVR
+### How to use it as streamer for Cloud NVR
 1. Install [rtsp-to-webrtsp](https://github.com/WebRTSP/ReStreamer#how-to-install-it-as-snap-package-and-try) on some VPS/VDS/Dedicated;
-2. Configure `rtsp-to-webrtsp` as described [here](https://github.com/WebRTSP/ReStreamer#how-to-use-it-as-cloud-dvr-for-ip-cam-not-accessable-directly);
+2. Configure `rtsp-to-webrtsp` as described [here](https://github.com/WebRTSP/ReStreamer#how-to-use-it-as-cloud-nvr-for-ip-cam-not-accessable-directly);
 3. Install `webrtsp-record-streamer` Snap package ([as described above](#how-to-install-it-as-snap-package)) on some device (you can use something like Raspberry Pi) on network where IP Cam is accessible directly;
 4. Open config file for edit ([as described above](#how-to-edit-config-file)) and replace content with something like
 ```
 target: {
   host: "example.com" // IP or DNS of host were rtsp-to-webrtsp is installed
   port: 5554 // or 5555 if TLS is enabled (highly recommended)
-  uri: "DVR" // use the same name as was used in rtsp-to-webrtsp's config
+  uri: "NVR" // use the same name as was used in rtsp-to-webrtsp's config
   token: "some-random-string" // use the same string as used in rtsp-to-webrtsp's config
 }
 
@@ -33,16 +33,16 @@ stun-server: "stun://stun.l.google.com:19302"
 5. Restart Snap: `sudo snap restart webrtsp-record-streamer`;
 
 
-### How to use it as streamer for Cloud DVR with motion detection
+### How to use it as streamer for Cloud NVR with motion detection
 1. Install [rtsp-to-webrtsp](https://github.com/WebRTSP/ReStreamer#how-to-install-it-as-snap-package-and-try) on some VPS/VDS/Dedicated;
-2. Configure `rtsp-to-webrtsp` as described [here](https://github.com/WebRTSP/ReStreamer#how-to-use-it-as-cloud-dvr-for-ip-cam-not-accessible-directly);
+2. Configure `rtsp-to-webrtsp` as described [here](https://github.com/WebRTSP/ReStreamer#how-to-use-it-as-cloud-nvr-for-ip-cam-not-accessible-directly);
 3. Install `webrtsp-record-streamer` Snap package ([as described above](#how-to-install-it-as-snap-package)) on some device (you can use something like Raspberry Pi) on network where IP Cam is accessible directly;
 4. Open config file for edit ([as described above](#how-to-edit-config-file)) and replace content with something like
 ```
 target: {
   host: "example.com" // IP or DNS of host were rtsp-to-webrtsp is installed
   port: 5554 // or 5555 if TLS is enabled (highly recommended)
-  uri: "DVR" // use the same name as was used in rtsp-to-webrtsp's config
+  uri: "NVR" // use the same name as was used in rtsp-to-webrtsp's config
   token: "some-random-string" // use the same string as used in rtsp-to-webrtsp's config
 }
 
