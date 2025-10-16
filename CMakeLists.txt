@@ -15,7 +15,6 @@ find_package(Threads REQUIRED)
 find_package(PkgConfig REQUIRED)
 
 pkg_search_module(LIBCONFIG REQUIRED libconfig)
-pkg_search_module(GSOAP REQUIRED gsoap++)
 
 file(GLOB SOURCES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
     *.cpp
@@ -24,10 +23,7 @@ file(GLOB SOURCES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
     README.md
     *.sh
     *.cmake
-    onvif/*.h
-    onvif/*.cpp
-    onvif/*.nsmap
-    onvif/*.sh)
+)
 
 file(GLOB_RECURSE SNAP RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
     snap/*)
