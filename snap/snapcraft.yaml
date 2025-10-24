@@ -1,7 +1,6 @@
 name: webrtsp-record-streamer
-base: core22
+base: core24
 summary: WebRTSP server remote Agent
-adopt-info: recorder
 description: |
   Intended to record RTSP streams from IP Cams (and some other URL types) to WebRTSP server (for example to https://snapcraft.io/rtsp-to-webrtsp).
   Can be used as part of Cloud NVR (https://github.com/WebRTSP/ReStreamer#how-to-use-it-as-cloud-nvr-for-ip-cam-not-accessible-directly)
@@ -12,50 +11,32 @@ grade: devel
 confinement: strict
 adopt-info: recorder
 
-architectures:
-  - build-on: amd64
-  - build-on: armhf
-  - build-on: arm64
+platforms:
+  amd64:
+  arm64:
 
 environment:
   GST_DEBUG: 2
   GST_DEBUG_NO_COLOR: 1
-  GST_PLUGIN_PATH: $SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/gstreamer-1.0
-  GST_PLUGIN_SYSTEM_PATH: $SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/gstreamer-1.0
-  GST_PLUGIN_SCANNER: $SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/gstreamer1.0/gstreamer-1.0/gst-plugin-scanner
+  GST_PLUGIN_PATH: $SNAP/usr/lib/${CRAFT_ARCH_TRIPLET_BUILD_FOR}/gstreamer-1.0
+  GST_PLUGIN_SYSTEM_PATH: $SNAP/usr/lib/${CRAFT_ARCH_TRIPLET_BUILD_FOR}/gstreamer-1.0
+  GST_PLUGIN_SCANNER: $SNAP/usr/lib/${CRAFT_ARCH_TRIPLET_BUILD_FOR}/gstreamer1.0/gstreamer-1.0/gst-plugin-scanner
 
 layout:
   /opt/webrtsp-record-streamer/lib:
     symlink: $SNAP/opt/webrtsp-record-streamer/lib
 
 parts:
-  lws:
-    plugin: cmake
-    source-type: git
-    source: https://github.com/warmcat/libwebsockets.git
-    source-branch: v4.3-stable
-    cmake-parameters:
-      - -DLWS_WITHOUT_TESTAPPS=ON
-      - -DLWS_WITH_GLIB=ON
-      - -DCMAKE_INSTALL_PREFIX=/opt/${SNAPCRAFT_PROJECT_NAME}
-    build-packages:
-      - libssl-dev
-    stage-packages:
-      - libssl3
   recorder:
     plugin: cmake
     source-type: git
     source: .
-    build-environment:
-      - PKG_CONFIG_PATH: $SNAPCRAFT_STAGE/opt/${SNAPCRAFT_PROJECT_NAME}/lib/pkgconfig:$SNAPCRAFT_STAGE/opt/${SNAPCRAFT_PROJECT_NAME}/lib/${SNAPCRAFT_ARCH_TRIPLET}/pkgconfig:${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}
     cmake-parameters:
       - -DCMAKE_BUILD_TYPE=Release
       - -DCMAKE_INSTALL_PREFIX=/opt/${SNAPCRAFT_PROJECT_NAME} -DUSE_LIBMICROHTTPD=NO
     override-pull: |
         craftctl default
         craftctl set version="$(git describe --always)"
-    after:
-      - lws
     build-packages:
       - g++
       - make
@@ -67,20 +48,20 @@ parts:
       - libgsoap-dev
       - libnice-dev
       - libmicrohttpd-dev
+      - libwebsockets-dev
     stage-packages:
       - libconfig9
       - libslang2
-      - libspdlog1
+      - libspdlog1.12
       - gstreamer1.0-plugins-good
       - gstreamer1.0-plugins-bad
       - gstreamer1.0-plugins-ugly
       - gstreamer1.0-nice
-      - libgsoap-2.8.117
+      - libgsoap-2.8.132t64
       - libnice10
       - libmicrohttpd12
-    prime:
-      - -usr/lib/arm-linux-gnueabihf/libde265.so.0.1.1
-      - -usr/lib/arm-linux-gnueabihf/libmpeg2.so.0.1.0
+      - libwebsockets19t64
+      - libwebsockets-evlib-glib
 
 apps:
   RecordStreamer:
