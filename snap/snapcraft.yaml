@@ -7,7 +7,7 @@ description: |
 
   **Config file location:** /var/snap/webrtsp-record-streamer/common/record-streamer.conf
 license: GPL-3.0
-grade: devel
+grade: stable
 confinement: strict
 adopt-info: recorder
 
