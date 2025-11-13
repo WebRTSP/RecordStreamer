@@ -37,7 +37,7 @@ static std::unique_ptr<WebRTCPeer> CreateClientPeer(const Config& config, const 
     }
 }
 
-static std::unique_ptr<rtsp::ClientSession> CreateClientSession (
+static std::unique_ptr<rtsp::Session> CreateClientSession (
     const Config& config,
     const rtsp::Session::SendRequest& sendRequest,
     const rtsp::Session::SendResponse& sendResponse) noexcept

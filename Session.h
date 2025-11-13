@@ -18,10 +18,6 @@ public:
         const rtsp::Request&,
         const rtsp::Response&) noexcept override;
 
-protected:
-    bool playSupportRequired(const std::string& /*uri*/) noexcept override { return false; }
-    bool recordSupportRequired(const std::string& /*uri*/) noexcept override { return true; }
-
 private:
     const Config&  _config;
 };
