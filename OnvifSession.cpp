@@ -504,6 +504,7 @@ void OnvifSession::Private::requestMotionEvent() noexcept
                 OnvifSession::Private* self =
                     reinterpret_cast<OnvifSession::Private*>(userData);
                 self->onMotionEvent(isMotion);
+                self->startMotionEventRequestTimeout();
             }
         };
 
@@ -532,8 +533,6 @@ void OnvifSession::Private::onMotionEvent(gboolean isMotion) noexcept
 
         startRecordStopTimeout();
     }
-
-    startMotionEventRequestTimeout();
 }
 
 void OnvifSession::Private::startRecordStopTimeout() noexcept
