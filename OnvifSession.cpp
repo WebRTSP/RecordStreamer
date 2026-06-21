@@ -5,9 +5,7 @@
 #include <gsoap/plugin/wsseapi.h>
 
 #include "ONVIF/DeviceBinding.nsmap"
-#include "ONVIF/soapDeviceBindingProxy.h"
-#include "ONVIF/soapMediaBindingProxy.h"
-#include "ONVIF/soapPullPointSubscriptionBindingProxy.h"
+#include "ONVIF/SOAP.h"
 
 #include "CxxPtr/GlibPtr.h"
 #include "CxxPtr/GioPtr.h"
@@ -18,6 +16,8 @@
 namespace {
 
 const char *const PullSubscriptionDuration = "PT1M"; // 1 minute, relative
+const char *const PullMessagesTimeout = "PT5S"; // 5 seconds
+const int PullMessagesLimit = 50;
 constexpr std::chrono::seconds PullSubscriptionRefreshInterval = std::chrono::seconds(30);
 
 void AddAuth(
@@ -58,7 +58,6 @@ struct OnvifSession::Private
         GCancellable* cancellable);
 
     struct MediaUris {
-        std::string mediaEndpointUri;
         std::string streamUri;
     };
 
@@ -95,8 +94,8 @@ struct OnvifSession::Private
 
     GCancellablePtr motionEventRequestTaskCancellablePtr;
     GTaskPtr motionEventRequestTaskPtr;
-    std::string motionEventSubscriptionEndpoint; // not thread safe, to use only in motionEventRequestTask
-    std::chrono::steady_clock::time_point motionEventSubscriptionTime; // ^^^ the same ^^^
+    std::string eventSubscriptionEndpoint; // not thread safe, to use only in motionEventRequestTask
+    std::chrono::steady_clock::time_point eventSubscriptionTime; // ^^^ the same ^^^
 
     GSourcePtr recordStopTimeoutSource;
 };
@@ -135,15 +134,20 @@ void OnvifSession::Private::requestMediaUrisTaskFunc(
 
     soap_status status;
 
-
-    DeviceBindingProxy deviceProxy(config.streamer.source.c_str());
+    SOAP soap;
 
     _tds__GetCapabilities getCapabilities;
+    tt__CapabilityCategory category = tt__CapabilityCategory::Media;
+    getCapabilities.Category.push_back(category);
     _tds__GetCapabilitiesResponse getCapabilitiesResponse;
-    AddAuth(deviceProxy.soap, config.streamer.username, config.streamer.password);
-    status = deviceProxy.GetCapabilities(&getCapabilities, getCapabilitiesResponse);
+    AddAuth(soap, config.streamer.username, config.streamer.password);
+    status = soap_call___tds__GetCapabilities(
+        soap,
+        config.streamer.source.c_str(),
+        nullptr,
+        &getCapabilities, getCapabilitiesResponse);
     if(status != SOAP_OK) {
-        const char* faultString = soap_fault_string(deviceProxy.soap);
+        const char* faultString = soap_fault_string(soap);
         GError* error = g_error_new_literal(SoapDomain, status, faultString ? faultString : "GetCapabilities failed");
         g_task_return_error(task, error);
         return;
@@ -151,15 +155,17 @@ void OnvifSession::Private::requestMediaUrisTaskFunc(
 
     const std::string& mediaEndpoint = getCapabilitiesResponse.Capabilities->Media->XAddr;
 
-
-    MediaBindingProxy mediaProxy(mediaEndpoint.c_str());
-
     _trt__GetProfiles getProfiles;
     _trt__GetProfilesResponse getProfilesResponse;
-    AddAuth(mediaProxy.soap, config.streamer.username, config.streamer.password);
-    status = mediaProxy.GetProfiles(&getProfiles, getProfilesResponse);
+    AddAuth(soap, config.streamer.username, config.streamer.password);
+    status = soap_call___trt__GetProfiles(
+        soap,
+        mediaEndpoint.c_str(),
+        nullptr,
+        &getProfiles,
+        getProfilesResponse);
     if(status != SOAP_OK) {
-        const char* faultString = soap_fault_string(deviceProxy.soap);
+        const char* faultString = soap_fault_string(soap);
         GError* error = g_error_new_literal(SoapDomain, status, faultString ? faultString : "GetProfiles failed");
         g_task_return_error(task, error);
         return;
@@ -190,10 +196,15 @@ void OnvifSession::Private::requestMediaUrisTaskFunc(
 
     getStreamUri.StreamSetup = &streamSetup;
 
-    AddAuth(mediaProxy.soap, config.streamer.username, config.streamer.password);
-    status = mediaProxy.GetStreamUri(&getStreamUri, getStreamUriResponse);
+    AddAuth(soap, config.streamer.username, config.streamer.password);
+    status = soap_call___trt__GetStreamUri(
+        soap,
+        mediaEndpoint.c_str(),
+        nullptr,
+        &getStreamUri,
+        getStreamUriResponse);
     if(status != SOAP_OK) {
-        const char* faultString = soap_fault_string(deviceProxy.soap);
+        const char* faultString = soap_fault_string(soap);
         GError* error = g_error_new_literal(SoapDomain, status, faultString ? faultString : "GetStreamUri failed");
         g_task_return_error(task, error);
         return;
@@ -247,9 +258,10 @@ void OnvifSession::Private::requestMediaUrisTaskFunc(
 
     g_task_return_pointer(
         task,
-        new MediaUris { mediaEndpoint, mediaUriUri },
+        new MediaUris { mediaUriUri },
         [] (gpointer mediaUris) { delete(static_cast<MediaUris*>(mediaUris)); });
-}
+};
+
 
 void OnvifSession::Private::requestMotionEventTaskFunc(
     GTask* task,
@@ -260,61 +272,95 @@ void OnvifSession::Private::requestMotionEventTaskFunc(
     soap_status status;
 
     OnvifSession::Private& self = *static_cast<OnvifSession::Private*>(taskData);
+    const Config& config = self.config;
+
+    SOAP soap;
+
+    _tds__GetCapabilities getCapabilities;
+    tt__CapabilityCategory category = tt__CapabilityCategory::Events;
+    getCapabilities.Category.push_back(category);
+    _tds__GetCapabilitiesResponse getCapabilitiesResponse;
+    AddAuth(soap, config.streamer.username, config.streamer.password);
+    status = soap_call___tds__GetCapabilities(
+        soap,
+        config.streamer.source.c_str(),
+        nullptr,
+        &getCapabilities, getCapabilitiesResponse);
+    if(status != SOAP_OK) {
+        const char* faultString = soap_fault_string(soap);
+        GError* error = g_error_new_literal(SoapDomain, status, faultString ? faultString : "GetCapabilities failed");
+        g_task_return_error(task, error);
+        return;
+    }
+
+    const std::string& eventsEndpoint = getCapabilitiesResponse.Capabilities->Events->XAddr;
 
     bool renewRequired = true;
-    if(self.motionEventSubscriptionEndpoint.empty()) {
-        PullPointSubscriptionBindingProxy subscribeProxy(self.mediaUris->mediaEndpointUri.c_str());
-
+    if(self.eventSubscriptionEndpoint.empty()) {
         _tev__CreatePullPointSubscription ceatePullPointSubscription;
         std::string InitialTerminationTime = PullSubscriptionDuration;
         ceatePullPointSubscription.InitialTerminationTime = &InitialTerminationTime;
         _tev__CreatePullPointSubscriptionResponse createPullPointSubscriptionResponse;
-        AddAuth(subscribeProxy.soap, self.config.streamer.username, self.config.streamer.password);
-        status = subscribeProxy.CreatePullPointSubscription(
+        AddAuth(soap, config.streamer.username, config.streamer.password);
+        status = soap_call___tev__CreatePullPointSubscription(
+            soap,
+            eventsEndpoint.c_str(),
+            nullptr,
             &ceatePullPointSubscription,
             createPullPointSubscriptionResponse);
         if(status != SOAP_OK) {
-            const char* faultString = soap_fault_string(subscribeProxy.soap);
+            const char* faultString = soap_fault_string(soap);
             GError* error = g_error_new_literal(SoapDomain, status, faultString ? faultString : "CreatePullPointSubscription failed");
             g_task_return_error(task, error);
             return;
         }
 
-        self.motionEventSubscriptionEndpoint = createPullPointSubscriptionResponse.SubscriptionReference.Address;
-        self.motionEventSubscriptionTime = std::chrono::steady_clock::now();
+        self.eventSubscriptionEndpoint = createPullPointSubscriptionResponse.SubscriptionReference.Address;
+        self.eventSubscriptionTime = std::chrono::steady_clock::now();
         renewRequired = false;
     } else {
-        const auto timeElapsed = std::chrono::steady_clock::now() - self.motionEventSubscriptionTime;
+        const auto timeElapsed = std::chrono::steady_clock::now() - self.eventSubscriptionTime;
         renewRequired = timeElapsed > PullSubscriptionRefreshInterval;
     }
-
-    PullPointSubscriptionBindingProxy pullProxy(self.motionEventSubscriptionEndpoint.c_str());
 
     if(renewRequired) {
         _wsnt__Renew renew;
         std::string TerminationTime = PullSubscriptionDuration;
         renew.TerminationTime = &TerminationTime;
         _wsnt__RenewResponse renewResponse;
-        AddAuth(pullProxy.soap, self.config.streamer.username, self.config.streamer.password);
-        status = pullProxy.Renew(&renew, renewResponse);
-        if(status != SOAP_OK) {
-            self.motionEventSubscriptionEndpoint.clear();
+        AddAuth(soap, config.streamer.username, config.streamer.password);
+        status = soap_call___tev__Renew(
+            soap,
+            self.eventSubscriptionEndpoint.c_str(),
+            nullptr,
+            &renew,
+            renewResponse);
 
-            const char* faultString = soap_fault_string(pullProxy.soap);
+        if(status != SOAP_OK) {
+            self.eventSubscriptionEndpoint.clear();
+
+            const char* faultString = soap_fault_string(soap);
             GError* error = g_error_new_literal(SoapDomain, status, faultString ? faultString : "Renew failed");
             g_task_return_error(task, error);
             return;
         }
 
-        self.motionEventSubscriptionTime = std::chrono::steady_clock::now();
+        self.eventSubscriptionTime = std::chrono::steady_clock::now();
     }
 
     _tev__PullMessages pullMessages;
+    pullMessages.Timeout = PullMessagesTimeout;
+    pullMessages.MessageLimit = PullMessagesLimit;
     _tev__PullMessagesResponse pullMessagesResponse;
-    AddAuth(pullProxy.soap, self.config.streamer.username, self.config.streamer.password);
-    status = pullProxy.PullMessages(&pullMessages, pullMessagesResponse);
+    AddAuth(soap, config.streamer.username, config.streamer.password);
+    status = soap_call___tev__PullMessages(
+        soap,
+        self.eventSubscriptionEndpoint.c_str(),
+        nullptr,
+        &pullMessages,
+        pullMessagesResponse);
     if(status != SOAP_OK) {
-        const char* faultString = soap_fault_string(pullProxy.soap);
+        const char* faultString = soap_fault_string(soap);
         GError* error = g_error_new_literal(SoapDomain, status, faultString ? faultString : "PullMessages failed");
         g_task_return_error(task, error);
         return;
@@ -324,11 +370,10 @@ void OnvifSession::Private::requestMotionEventTaskFunc(
         const soap_dom_element& message = messageHolder->Message.__any;
         soap_dom_element* data = message.elt_get("tt:Data");
         if(!data) {
-            GError* error =
-                g_error_new_literal(
-                    Domain,
-                    NOTIFICATION_MESSAGE_HAS_NO_DATA_ELEMENT,
-                    "Notification message has no data element");
+            GError* error = g_error_new_literal(
+                Domain,
+                NOTIFICATION_MESSAGE_HAS_NO_DATA_ELEMENT,
+                "Notification message has no data element");
             g_task_return_error(task, error);
             return;
         }
@@ -342,19 +387,14 @@ void OnvifSession::Private::requestMotionEventTaskFunc(
             const soap_dom_attribute* value = simpleItem->att_get("Value");
             if(!value || !value->get_text()) continue;
 
-            gboolean isMotion = value->is_true();
+            const gboolean isMotion = value->is_true();
 
             g_task_return_boolean(task, isMotion);
             return;
         }
     }
 
-    GError* error =
-        g_error_new_literal(
-            Domain,
-            NOTIFICATION_MESSAGE_DOES_NOT_CONTAIN_MOTION_EVENT,
-            "Notification message doesn't contain motion event");
-    g_task_return_error(task, error);
+    g_task_return_boolean(task, false);
 }
 
 void OnvifSession::Private::requestMediaUris() noexcept
@@ -406,7 +446,6 @@ void OnvifSession::Private::requestMediaUris() noexcept
 
 void OnvifSession::Private::onMediaUris(std::unique_ptr<MediaUris>& mediaUris) noexcept
 {
-    log->info("Media endpoint uri discovered: {}", mediaUris->mediaEndpointUri);
     log->info("Media stream uri discovered: {}", mediaUris->streamUri);
 
     this->mediaUris.swap(mediaUris);
