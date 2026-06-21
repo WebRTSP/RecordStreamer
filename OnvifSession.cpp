@@ -4,7 +4,7 @@
 
 #include <gsoap/plugin/wsseapi.h>
 
-#include "ONVIF/DeviceBinding.nsmap"
+#include "ONVIF/onvif.nsmap"
 #include "ONVIF/SOAP.h"
 
 #include "CxxPtr/GlibPtr.h"
